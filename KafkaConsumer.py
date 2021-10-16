@@ -34,8 +34,8 @@ for message in consumer :
 		#print(article.summary)
 		a['summary']=article.summary
 		a['article']=article.text
-		collection.insert_one(insertValue)
-		print(insertValue)
+		collection.insert_one(a)
+		print(a)
 	except Exception as e:
 		print(f'error while parsing, not inserted into db --> {e}')
 		
