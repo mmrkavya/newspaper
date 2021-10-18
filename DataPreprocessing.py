@@ -15,24 +15,6 @@ nltk.download('punkt')
 nltk.download('wordnet')
 #from nltk.stem.porter import PorterStemmer
 import string
-import sklearn
-
-from tensorflow import keras
-from keras.preprocessing.text import text_to_word_sequence
-from nltk.corpus import stopwords
-from nltk.stem import PorterStemmer
-from nltk.stem import WordNetLemmatizer
-from nltk.corpus import wordnet
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.model_selection import train_test_split
-from sklearn import svm
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.naive_bayes import GaussianNB
-from sklearn.metrics import roc_auc_score
-from sklearn.pipeline import Pipeline
-from sklearn.metrics import classification_report
-from sklearn.metrics import accuracy_score
 
 from nltk.stem import WordNetLemmatizer
 lemmatizer = WordNetLemmatizer()
@@ -63,48 +45,7 @@ def preprocess(article):
             #storing the words after lemmatizier
                 tokens=tokens+[lemmatizer.lemmatize(i, pos ='v')]
     return tokens
-def preprocessDataset(train_text):
-       
-    #word tokenization using text-to-word-sequence
-    train_text= str(train_text)
-    tokenized_train_set = text_to_word_sequence(train_text,filters='!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n',lower=True,split=" ")
-        
-    #stop word removal
-    stop_words = set(stopwords.words('english'))
-    stopwordremove = [i for i in tokenized_train_set if not i in stop_words]
-        
-     
-    #join words into sentence
-    stopwordremove_text = ' '.join(stopwordremove)
-        
-        
-    #remove numbers
-    numberremove_text = ''.join(c for c in stopwordremove_text if not c.isdigit())
-       
-        
-    #--Stemming--
-    stemmer= PorterStemmer()
 
-    stem_input=nltk.word_tokenize(numberremove_text)
-    stem_text=' '.join([stemmer.stem(word) for word in stem_input])
-        
-        
-    lemmatizer = WordNetLemmatizer()
-
-    def get_wordnet_pos(word):
-        """Map POS tag to first character lemmatize() accepts"""
-        tag = nltk.pos_tag([word])[0][1][0].upper()
-        tag_dict = {"J": wordnet.ADJ,
-                "N": wordnet.NOUN,
-                "V": wordnet.VERB,
-                "R": wordnet.ADV}
-
-        return tag_dict.get(tag, wordnet.NOUN)
-
-    lem_input = nltk.word_tokenize(stem_text)
-    lem_text= ' '.join([lemmatizer.lemmatize(w, get_wordnet_pos(w)) for w in lem_input])
-        
-    return lem_text
 
 spark = SparkSession.\
 builder.\
@@ -135,29 +76,6 @@ except Exception as e:
 t=transformRDD.toDF()
 
 t.show()
-text = t['article']
-category = t['Category']
-print(text.head())
- 
-X_train, X_test, Y_train, Y_test = train_test_split(text,category, test_size = 0.3, random_state = 60,shuffle=True, stratify=category)
-
-print(len(X_train))
-print(len(X_test))
-nb = Pipeline([('tfidf', TfidfVectorizer()),
-               ('clf', MultinomialNB()),
-              ])
-nb.fit(X_train,Y_train)
-
-test_predict = nb.predict(X_test)
-
-train_accuracy = round(nb.score(X_train,Y_train)*100)
-test_accuracy =round(accuracy_score(test_predict, Y_test)*100)
-
-
-print("Naive Bayes Train Accuracy Score : {}% ".format(train_accuracy ))
-print("Naive Bayes Test Accuracy Score  : {}% ".format(test_accuracy ))
-print()
-print(classification_report(test_predict, Y_test, target_names=target_category))
 '''
 sample output of the file
 vagrant@vagrant:~$ python3 /vagrant/DataPreprocessing.py
