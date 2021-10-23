@@ -43,30 +43,45 @@ from nltk.corpus import wordnet
 nltk.download('averaged_perceptron_tagger')
 import pickle
 
+def get_wordnet_pos(word):
+    """Map POS tag to first character lemmatize() accepts"""
+    tag = nltk.pos_tag([word])[0][1][0].upper()
+    tag_dict = {'j': wordnet.ADJ,
+          'n': wordnet.NOUN,
+          'v': wordnet.VERB,
+          'r': wordnet.ADV}
+
+    return tag_dict.get(tag, wordnet.NOUN)
+  
+
+#to lower case
+
+#remove punctuations
 def remove_punctuation(text):
    # res = re.sub(r'[^\w\s]', '', text)
-   translator = str.maketrans('', '', string.punctuation)
+   translator = str.maketrans(' ', ' ', string.punctuation)
    return text.translate(translator)
+    
 
 
-def preprocess(article):   
-    #to lower case
-    article=''.join(filter(str.isalpha, article)).lower()
-    #removing punctuation marks
+
+def preprocess(text): 
+    article=text.lower()
     article=remove_punctuation(str(article))
     #removing numbers
-    article = re.findall(r'\w+', article)     
-    tokens=""
+    article = re.findall(r'[A-Za-z]+', article)
+    tokens=str()
     #stop words list
     stop_words = set(stopwords.words("english"))
     for t in article:
        t2=nltk.word_tokenize(t)
        for i in t2:
          #removing duplicate words and stop words
-            if i not in tokens and i not in stop_words:
-            #tokens=tokens+[stemmer.stem(i),]
-            #storing the words after lemmatizier
-                tokens=tokens+" " +lemmatizer.lemmatize(i, pos ='v')
+         if i not in tokens and i not in stop_words:
+           #tokens=tokens+[stemmer.stem(i),]
+           #storing the words after lemmatizier
+           tokens=tokens+" " +lemmatizer.lemmatize(i, pos ='v')
+    #print(tokens)
     return tokens
 
 
@@ -88,14 +103,14 @@ df.registerTempTable("newspaperFeed")
 result_data=sqlContext.sql("SELECT * from newspaperFeed")
 result_data.show()
 result_data_rdd=sc.parallelize(result_data.collect())
-transformRDD=result_data_rdd.map(lambda article: dict({'category':article['category'],'article':preprocess(article['article'])}))
+transformRDD=result_data_rdd.map(lambda article: dict({'category':article['category'],'article':preprocess(article['article']+" "+article['summary']+" "+article["title"])}))
 
 try:
-	print(type(transformRDD.toDF()))
+    print(type(transformRDD.toDF()))
 except Exception as e:
-	print(hasattr(transformRDD,"toDF"))
-	print(type(transformRDD.toDF()))
-#first time the toDF is not working so just catching the exception and doing it again	
+    print(hasattr(transformRDD,"toDF"))
+    print(type(transformRDD.toDF()))
+#first time the toDF is not working so just catching the exception and doing it again   
 t=transformRDD.toDF().toPandas()
 target_category = t['category'].unique()
 print((t['category']))
@@ -110,7 +125,7 @@ t.groupby('category').category.count().plot.bar(ylim=0)
 
 X_train, X_test, Y_train, Y_test = train_test_split(text,category, test_size = 0.3, random_state = 60,shuffle=True, stratify=category)
 nb = Pipeline([('tfidf', TfidfVectorizer()),
-               ('clf',DecisionTreeClassifier()),
+               ('clf',MultinomialNB()),
               ])
 nb.fit(X_train,Y_train)
 
@@ -126,6 +141,8 @@ print("Decision Tree Test Accuracy Score  : {}% ".format(test_accuracy ))
 print(classification_report(test_predict, Y_test, target_names=target_category))
 with open("_model.pickle", "wb") as file:
     pickle.dump(nb, file)
+    
+
 '''
 sample output of the file
 vagrant@vagrant:~$ python3 /vagrant/DataPreprocessing.py
