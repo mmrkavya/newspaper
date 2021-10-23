@@ -5,6 +5,26 @@ from pyspark.sql import SQLContext
 import nltk
 import re
 
+from sklearn.preprocessing import LabelEncoder
+from tensorflow import keras
+from keras.preprocessing.text import text_to_word_sequence
+from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer
+from nltk.stem import WordNetLemmatizer
+from nltk.corpus import wordnet
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import TfidfTransformer
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.model_selection import train_test_split
+from sklearn import svm
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import roc_auc_score
+from sklearn.pipeline import Pipeline
+from sklearn.metrics import classification_report
+from sklearn.metrics import accuracy_score
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
 #!pip install translate 
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
@@ -15,25 +35,28 @@ nltk.download('punkt')
 nltk.download('wordnet')
 #from nltk.stem.porter import PorterStemmer
 import string
+import pandas as pd
 
 from nltk.stem import WordNetLemmatizer
 lemmatizer = WordNetLemmatizer()
-
+from nltk.corpus import wordnet
+nltk.download('averaged_perceptron_tagger')
+import pickle
 
 def remove_punctuation(text):
    # res = re.sub(r'[^\w\s]', '', text)
    translator = str.maketrans('', '', string.punctuation)
    return text.translate(translator)
-   
-   
+
+
 def preprocess(article):   
     #to lower case
-    article=article.lower()
+    article=''.join(filter(str.isalpha, article)).lower()
     #removing punctuation marks
     article=remove_punctuation(str(article))
     #removing numbers
-    article = re.findall(r'\D+', article)     
-    tokens=[]
+    article = re.findall(r'\w+', article)     
+    tokens=""
     #stop words list
     stop_words = set(stopwords.words("english"))
     for t in article:
@@ -43,7 +66,7 @@ def preprocess(article):
             if i not in tokens and i not in stop_words:
             #tokens=tokens+[stemmer.stem(i),]
             #storing the words after lemmatizier
-                tokens=tokens+[lemmatizer.lemmatize(i, pos ='v')]
+                tokens=tokens+" " +lemmatizer.lemmatize(i, pos ='v')
     return tokens
 
 
@@ -65,7 +88,7 @@ df.registerTempTable("newspaperFeed")
 result_data=sqlContext.sql("SELECT * from newspaperFeed")
 result_data.show()
 result_data_rdd=sc.parallelize(result_data.collect())
-transformRDD=result_data_rdd.map(lambda article: (article['category'],preprocess(article['article'])))
+transformRDD=result_data_rdd.map(lambda article: dict({'category':article['category'],'article':preprocess(article['article'])}))
 
 try:
 	print(type(transformRDD.toDF()))
@@ -73,9 +96,36 @@ except Exception as e:
 	print(hasattr(transformRDD,"toDF"))
 	print(type(transformRDD.toDF()))
 #first time the toDF is not working so just catching the exception and doing it again	
-t=transformRDD.toDF()
+t=transformRDD.toDF().toPandas()
+target_category = t['category'].unique()
+print((t['category']))
+encoder = LabelEncoder()
+t['categoryId'] = encoder.fit_transform(t['category'])
+text = t['article']
+category = t['category']
 
-t.show()
+print(t)
+
+t.groupby('category').category.count().plot.bar(ylim=0)
+
+X_train, X_test, Y_train, Y_test = train_test_split(text,category, test_size = 0.3, random_state = 60,shuffle=True, stratify=category)
+nb = Pipeline([('tfidf', TfidfVectorizer()),
+               ('clf',DecisionTreeClassifier()),
+              ])
+nb.fit(X_train,Y_train)
+
+test_predict = nb.predict(X_test)
+
+train_accuracy = round(nb.score(X_train,Y_train)*100)
+test_accuracy =round(accuracy_score(test_predict, Y_test)*100)
+
+
+print("Decision Tree Train Accuracy Score : {}% ".format(train_accuracy ))
+print("Decision Tree Test Accuracy Score  : {}% ".format(test_accuracy ))
+
+print(classification_report(test_predict, Y_test, target_names=target_category))
+with open("_model.pickle", "wb") as file:
+    pickle.dump(nb, file)
 '''
 sample output of the file
 vagrant@vagrant:~$ python3 /vagrant/DataPreprocessing.py
@@ -184,4 +234,3 @@ True
 +--------+--------------------+
 only showing top 20 rows
 '''
-
