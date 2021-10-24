@@ -2,16 +2,8 @@ import pyspark
 from pyspark import SparkContext
 from pyspark.sql import SparkSession
 from pyspark.sql import SQLContext
+from sklearn.preprocessing import LabelEncoder  
 import nltk
-import re
-
-from sklearn.preprocessing import LabelEncoder
-from tensorflow import keras
-from keras.preprocessing.text import text_to_word_sequence
-from nltk.corpus import stopwords
-from nltk.stem import PorterStemmer
-from nltk.stem import WordNetLemmatizer
-from nltk.corpus import wordnet
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.feature_extraction.text import CountVectorizer
@@ -25,64 +17,14 @@ from sklearn.metrics import classification_report
 from sklearn.metrics import accuracy_score
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
-#!pip install translate 
-from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
-import string
-#import translate
-nltk.download('stopwords')
+from news_article import get_insert_doc
+
 nltk.download('punkt')
-nltk.download('wordnet')
-#from nltk.stem.porter import PorterStemmer
+
 import string
 import pandas as pd
-
-from nltk.stem import WordNetLemmatizer
-lemmatizer = WordNetLemmatizer()
-from nltk.corpus import wordnet
-nltk.download('averaged_perceptron_tagger')
 import pickle
-
-def get_wordnet_pos(word):
-    """Map POS tag to first character lemmatize() accepts"""
-    tag = nltk.pos_tag([word])[0][1][0].upper()
-    tag_dict = {'j': wordnet.ADJ,
-          'n': wordnet.NOUN,
-          'v': wordnet.VERB,
-          'r': wordnet.ADV}
-
-    return tag_dict.get(tag, wordnet.NOUN)
-  
-
-#to lower case
-
-#remove punctuations
-def remove_punctuation(text):
-   # res = re.sub(r'[^\w\s]', '', text)
-   translator = str.maketrans(' ', ' ', string.punctuation)
-   return text.translate(translator)
-    
-
-
-
-def preprocess(text): 
-    article=text.lower()
-    article=remove_punctuation(str(article))
-    #removing numbers
-    article = re.findall(r'[A-Za-z]+', article)
-    tokens=str()
-    #stop words list
-    stop_words = set(stopwords.words("english"))
-    for t in article:
-       t2=nltk.word_tokenize(t)
-       for i in t2:
-         #removing duplicate words and stop words
-         if i not in tokens and i not in stop_words:
-           #tokens=tokens+[stemmer.stem(i),]
-           #storing the words after lemmatizier
-           tokens=tokens+" " +lemmatizer.lemmatize(i, pos ='v')
-    #print(tokens)
-    return tokens
+import Preprocess as pp
 
 
 spark = SparkSession.\
@@ -103,7 +45,7 @@ df.registerTempTable("newspaperFeed")
 result_data=sqlContext.sql("SELECT * from newspaperFeed")
 result_data.show()
 result_data_rdd=sc.parallelize(result_data.collect())
-transformRDD=result_data_rdd.map(lambda article: dict({'category':article['category'],'article':preprocess(article['article']+" "+article['summary']+" "+article["title"])}))
+transformRDD=result_data_rdd.map(lambda article: dict({'category':article['category'],'article':pp.preprocess(article['article']+" "+article['summary']+" "+article["title"])}))
 
 try:
     print(type(transformRDD.toDF()))
@@ -124,6 +66,9 @@ print(t)
 t.groupby('category').category.count().plot.bar(ylim=0)
 
 X_train, X_test, Y_train, Y_test = train_test_split(text,category, test_size = 0.3, random_state = 60,shuffle=True, stratify=category)
+print("--------------------X_train"+X_train)
+print("---------------Y_train-------------")
+print("Y_train")
 nb = Pipeline([('tfidf', TfidfVectorizer()),
                ('clf',MultinomialNB()),
               ])
@@ -139,13 +84,50 @@ print("Decision Tree Train Accuracy Score : {}% ".format(train_accuracy ))
 print("Decision Tree Test Accuracy Score  : {}% ".format(test_accuracy ))
 
 print(classification_report(test_predict, Y_test, target_names=target_category))
-with open("_model.pickle", "wb") as file:
+with open("_model.pkl", "wb") as file:
     pickle.dump(nb, file)
     
+print(nb.predict([pp.preprocess("cricket")]))
+
+
+
+def retrain(data):
+    preprocessed_data=[]
+    try:
+        global X_train,Y_train
+        
+        for d in data: 
+            data=get_insert_doc(data)
+            preprocessed_data=preprocessed_data+[{'category':d['category'],'article':pp.preprocess(d['article']+" "+d['summary']+" "+d["title"])},]
+            X_train=X_train+[d['category'],]
+            Y_train=Y_train+[d['article'],]
+     
+        global nb
+        nb.fit(X_train,Y_train)
+        with open("_model.pkl", "wb") as file:
+            pickle.dump(nb, file)
+        #print(nb.predict([pp.preprocess("medicine")]))
+        print("retrained successfully")
+    except Exception as e:
+        print("Error while retraining")
+
+
+	
+    
+
 
 '''
-sample output of the file
-vagrant@vagrant:~$ python3 /vagrant/DataPreprocessing.py
+retrain([{'article': "Petrol and diesel prices on Saturday rallied to their highest ever levels across the country, as fuel rates were hiked again by 35 paise a litre.\n\nThe price of petrol in Delhi rose to its highest-ever level of ₹105.49 a litre and ₹111.43 per litre in Mumbai, according to a price notification of state-owned fuel retailers. In Mumbai, diesel now comes for ₹102.15 a litre; while in Delhi, it costs ₹94.22.\n\nThis is the third straight day of 35 paise per litre increase in petrol and diesel prices. There was no change in rates on October 12 and 13.\n\nPetrol and diesel have been priced at ₹106.10 and ₹97.33 respectively in West Bengal's Kolkata and ₹102.70 and ₹98.59 in Chennai respectively.\n\nIn Bengaluru, petrol is available at ₹109.16 per litre and diesel at ₹100.00 and in Hyderabad, one litre of petrol is now available at ₹109.73 and diesel cost ₹102.80 for one litre of diesel.\n\nSince the ending of a three-week-long hiatus in rate revision in the last week of September, this is the 15th increase in petrol price and the 18th time that diesel rates have gone up.\n\nWhile petrol price in most of the country is already above ₹100-a-litre mark, diesel rates have crossed that level in a dozen states, including Madhya Pradesh, Rajasthan, Odisha, Andhra Pradesh, Telangana, Gujarat, Maharashtra, Chhattisgarh, Bihar, Kerala, Karnataka and Leh. Prices differ from state to state depending on the incidence of local taxes.\n\nShedding the modest price change policy, state-owned fuel retailers have since October 6 started passing on the larger incidence of cost to consumers. This is because the international benchmark Brent crude is trading at USD 84.61 per barrel for the first time in seven years.\n\nA month back, Brent was trading at USD 73.51. Being a net importer of oil, India prices petrol and diesel at rates equivalent to international prices. The surge in international oil prices ended a three-week hiatus in rates on September 28 for petrol and September 24 for diesel.\n\nSince then, diesel rates have gone up by ₹5.25 per litre and petrol price has increased by ₹4.25. Before that, the petrol price was increased by ₹11.44 a litre between May 4 and July 17. Diesel rate had gone up by ₹9.14 during this period.\n\nSubscribe to Mint Newsletters * Enter a valid email * Thank you for subscribing to our newsletter.",
+ 'author': 'Livemint',
+ 'category': 'business',
+ 'publishedAt': '2021-10-16T01:51:52Z',
+ 'source': 'Livemint',
+ 'summary': 'Petrol and diesel prices on Saturday rallied to their highest ever levels across the country, as fuel rates were hiked again by 35 paise a litre.\nThis is the third straight day of 35 paise per litre increase in petrol and diesel prices.\nBeing a net importer of oil, India prices petrol and diesel at rates equivalent to international prices.\nThe surge in international oil prices ended a three-week hiatus in rates on September 28 for petrol and September 24 for diesel.\nSince then, diesel rates have gone up by ₹5.25 per litre and petrol price has increased by ₹4.25.',
+ 'title': 'Petrol, diesel prices today: Fuel rates hiked, diesel crosses ₹94 mark in Delhi - Mint'},])
+    
+
+2021-10-23 11:24:51.455588: W tensorflow/stream_executor/platform/default/dso_loader.cc:64] Could not load dynamic library 'libcudart.so.11.0'; dlerror: libcudart.so.11.0: cannot open shared object file: No such file or directory
+2021-10-23 11:24:51.455804: I tensorflow/stream_executor/cuda/cudart_stub.cc:29] Ignore above cudart dlerror if you do not have a GPU set up on your machine.
 [nltk_data] Downloading package stopwords to
 [nltk_data]     /home/vagrant/nltk_data...
 [nltk_data]   Package stopwords is already up-to-date!
@@ -153,15 +135,19 @@ vagrant@vagrant:~$ python3 /vagrant/DataPreprocessing.py
 [nltk_data]   Package punkt is already up-to-date!
 [nltk_data] Downloading package wordnet to /home/vagrant/nltk_data...
 [nltk_data]   Package wordnet is already up-to-date!
+[nltk_data] Downloading package averaged_perceptron_tagger to
+[nltk_data]     /home/vagrant/nltk_data...
+[nltk_data]   Package averaged_perceptron_tagger is already up-to-
+[nltk_data]       date!
 Ivy Default Cache set to: /home/vagrant/.ivy2/cache
 The jars for the packages stored in: /home/vagrant/.ivy2/jars
 :: loading settings :: url = jar:file:/home/vagrant/.local/lib/python3.6/site-packages/pyspark/jars/ivy-2.4.0.jar!/org/apache/ivy/core/settings/ivysettings.xml
 org.mongodb.spark#mongo-spark-connector_2.11 added as a dependency
-:: resolving dependencies :: org.apache.spark#spark-submit-parent-7da73bf9-f0c9-4db4-adf6-3ad26312ffb5;1.0
+:: resolving dependencies :: org.apache.spark#spark-submit-parent-e4574cce-f685-450e-ad1f-5bec319e5427;1.0
         confs: [default]
         found org.mongodb.spark#mongo-spark-connector_2.11;2.3.5 in central
         found org.mongodb#mongo-java-driver;3.12.5 in central
-:: resolution report :: resolve 617ms :: artifacts dl 19ms
+:: resolution report :: resolve 739ms :: artifacts dl 24ms
         :: modules in use:
         org.mongodb#mongo-java-driver;3.12.5 from central in [default]
         org.mongodb.spark#mongo-spark-connector_2.11;2.3.5 from central in [default]
@@ -171,12 +157,12 @@ org.mongodb.spark#mongo-spark-connector_2.11 added as a dependency
         ---------------------------------------------------------------------
         |      default     |   2   |   0   |   0   |   0   ||   2   |   0   |
         ---------------------------------------------------------------------
-:: retrieving :: org.apache.spark#spark-submit-parent-7da73bf9-f0c9-4db4-adf6-3ad26312ffb5
+:: retrieving :: org.apache.spark#spark-submit-parent-e4574cce-f685-450e-ad1f-5bec319e5427
         confs: [default]
-        0 artifacts copied, 2 already retrieved (0kB/23ms)
-21/10/17 17:05:36 WARN Utils: Your hostname, vagrant resolves to a loopback address: 127.0.1.1; using 10.0.2.15 instead (on interface eth0)
-21/10/17 17:05:36 WARN Utils: Set SPARK_LOCAL_IP if you need to bind to another address
-21/10/17 17:05:36 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+        0 artifacts copied, 2 already retrieved (0kB/17ms)
+21/10/23 11:25:18 WARN Utils: Your hostname, vagrant resolves to a loopback address: 127.0.1.1; using 10.0.2.15 instead (on interface eth0)
+21/10/23 11:25:18 WARN Utils: Set SPARK_LOCAL_IP if you need to bind to another address
+21/10/23 11:25:20 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
 Using Spark's default log4j profile: org/apache/spark/log4j-defaults.properties
 Setting default log level to "WARN".
 To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
@@ -221,33 +207,53 @@ ns...|                null|business|2021-10-15T09:57:09Z|      Moneycontrol|Goin
 only showing top 20 rows
 
 True
-21/10/17 17:05:59 WARN TaskSetManager: Stage 3 contains a task of very large size (2185 KB). The maximum recommended task size is 100 KB.
+21/10/23 11:25:49 WARN TaskSetManager: Stage 3 contains a task of very large size (2185 KB). The maximum recommended task size is 100 KB.
+/home/vagrant/.local/lib/python3.6/site-packages/pyspark/sql/session.py:366: UserWarning: Using RDD of dict to inferSchema is deprecated. Use pyspark.sql.Row instead
+  warnings.warn("Using RDD of dict to inferSchema is deprecated. "
 <class 'pyspark.sql.dataframe.DataFrame'>
-21/10/17 17:06:03 WARN TaskSetManager: Stage 4 contains a task of very large size (2185 KB). The maximum recommended task size is 100 KB.
-21/10/17 17:06:07 WARN TaskSetManager: Stage 5 contains a task of very large size (2185 KB). The maximum recommended task size is 100 KB.
-+--------+--------------------+
-|      _1|                  _2|
-+--------+--------------------+
-|business|[petrol, diesel, ...|
-|business|[pandora, paper, ...|
-|business|[feature, chinaba...|
-|business|[smartphone, ship...|
-|business|[new, chassis, pe...|
-|business|[mukesh, ambanile...|
-|business|[tata, group, com...|
-|business|[representative, ...|
-|business|[though, cryptocu...|
-|business|[since, announcem...|
-|business|[shiba, inu, one,...|
-|business|[look, cash, onli...|
-|business|[check, best, dea...|
-|business|[festive, season,...|
-|business|[nomura, hold, lt...|
-|business|[check, onpaper, ...|
-|business|[live, bse, nse, ...|
-|business|[image, reuters, ...|
-|business|[us, senator, eli...|
-|business|[nagaraj, shetti,...|
-+--------+--------------------+
-only showing top 20 rows
+21/10/23 11:26:06 WARN TaskSetManager: Stage 4 contains a task of very large size (2185 KB). The maximum recommended task size is 100 KB.
+21/10/23 11:26:13 WARN TaskSetManager: Stage 5 contains a task of very large size (2185 KB). The maximum recommended task size is 100 KB.
+0        business
+1        business
+2        business
+3        business
+4        business
+          ...
+577    technology
+578    technology
+579    technology
+580    technology
+581    technology
+Name: category, Length: 582, dtype: object
+                                               article    category  categoryId
+0     petrol diesel price saturday rally highest ev...    business           0
+1     pandora paper contain fresh lead indian inves...    business           0
+2     feature chinabarcroft media via getty image c...    business           0
+3     smartphone shipments julyseptember period fel...    business           0
+4     new chassis performance upgrade enhance safet...    business           0
+..                                                 ...         ...         ...
+577   twitch passwords expose livestreaming service...  technology           6
+578   windows insiders get fix amd performance issu...  technology           6
+579   nakuul mehtas son sufi wife jankee visit set ...  technology           6
+580   animal cross new horizons direct absolutely s...  technology           6
+581   htc unveil vive flow portable vr headset use ...  technology           6
+
+[582 rows x 3 columns]
+Decision Tree Train Accuracy Score : 95%
+Decision Tree Test Accuracy Score  : 89%
+               precision    recall  f1-score   support
+
+     business       1.00      0.88      0.94        41
+entertainment       1.00      0.84      0.92        32
+      general       0.39      0.75      0.51        12
+       health       0.92      0.96      0.94        23
+      science       1.00      0.88      0.94        26
+       sports       1.00      0.88      0.94        26
+   technology       0.79      1.00      0.88        15
+
+     accuracy                           0.89       175
+    macro avg       0.87      0.89      0.87       175
+ weighted avg       0.93      0.89      0.90       175
+
+['sports']
 '''
