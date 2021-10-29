@@ -6,10 +6,10 @@ from json import dumps
 import time
 import random
 import datetime
-import requests 
-
+import requests
+import os
 #Declaring Kafka_Broker Port
-KAFKA_BROKER = 'localhost:9092'
+KAFKA_BROKER = os.getenv("KAFKA_BROKER")
 #Declaring #Kafka Topic
 KAFKA_TOPIC = 'newspaper'
 

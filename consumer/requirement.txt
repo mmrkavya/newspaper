@@ -1,0 +1,4 @@
+newspaper3k
+kafka-python
+nltk
+pymongo

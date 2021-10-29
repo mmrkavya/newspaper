@@ -17,7 +17,8 @@ from sklearn.metrics import classification_report
 from sklearn.metrics import accuracy_score
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
-from news_article import get_insert_doc
+from news_article import get_insert_doc,get_article
+from Preprocess import preprocess
 
 nltk.download('punkt')
 
@@ -26,68 +27,73 @@ import pandas as pd
 import pickle
 import Preprocess as pp
 
+X_train=None
+Y_train=None
+nb=None
+model_path='./_model.pickle'
 
-spark = SparkSession.\
-builder.\
-appName("pyspark-notebook2").\
-config("spark.mongodb.input.uri=mongodb://kavya:BzSz97SmGzU9ZKL6@cluster0-shard-00-00.rhrte.mongodb.net:27017,cluster0-shard-00-01.rhrte.mongodb.net:27017,cluster0-shard-00-02.rhrte.mongodb.net:27017/newspaper?ssl=true&replicaSet=atlas-q05w9f-shard-0&authSource=admin&retryWrites=true&w=majority").\
-config("spark.mongodb.output.uri=mongodb://kavya:BzSz97SmGzU9ZKL6@cluster0-shard-00-00.rhrte.mongodb.net:27017,cluster0-shard-00-01.rhrte.mongodb.net:27017,cluster0-shard-00-02.rhrte.mongodb.net:27017/newspaper?ssl=true&replicaSet=atlas-q05w9f-shard-0&authSource=admin&retryWrites=true&w=majority").\
-config("spark.mongodb.input.database","newspaper").\
-config("spark.mongodb.input.collection","newspaperFeed"). \
-config("spark.jars.packages","org.mongodb.spark:mongo-spark-connector_2.11:2.3.5").\
-getOrCreate()
+def initial_model_training():
+    spark = SparkSession.\
+    builder.\
+    appName("pyspark-notebook2").\
+    config("spark.mongodb.input.uri=mongodb://kavya:BzSz97SmGzU9ZKL6@cluster0-shard-00-00.rhrte.mongodb.net:27017,cluster0-shard-00-01.rhrte.mongodb.net:27017,cluster0-shard-00-02.rhrte.mongodb.net:27017/newspaper?ssl=true&replicaSet=atlas-q05w9f-shard-0&authSource=admin&retryWrites=true&w=majority").\
+    config("spark.mongodb.output.uri=mongodb://kavya:BzSz97SmGzU9ZKL6@cluster0-shard-00-00.rhrte.mongodb.net:27017,cluster0-shard-00-01.rhrte.mongodb.net:27017,cluster0-shard-00-02.rhrte.mongodb.net:27017/newspaper?ssl=true&replicaSet=atlas-q05w9f-shard-0&authSource=admin&retryWrites=true&w=majority").\
+    config("spark.mongodb.input.database","newspaper").\
+    config("spark.mongodb.input.collection","newspaperFeed"). \
+    config("spark.jars.packages","org.mongodb.spark:mongo-spark-connector_2.11:2.3.5").\
+    getOrCreate()
 
-sc=spark.sparkContext
-sqlContext=SQLContext(sc)
-df = spark.read.format("com.mongodb.spark.sql.DefaultSource").load()
-df.printSchema()
-df.registerTempTable("newspaperFeed")
-result_data=sqlContext.sql("SELECT * from newspaperFeed")
-result_data.show()
-result_data_rdd=sc.parallelize(result_data.collect())
-transformRDD=result_data_rdd.map(lambda article: dict({'category':article['category'],'article':pp.preprocess(article['article']+" "+article['summary']+" "+article["title"])}))
+    sc=spark.sparkContext
+    sqlContext=SQLContext(sc)
+    df = spark.read.format("com.mongodb.spark.sql.DefaultSource").load()
+    df.printSchema()
+    df.registerTempTable("newspaperFeed")
+    result_data=sqlContext.sql("SELECT * from newspaperFeed")
+    result_data.show()
+    result_data_rdd=sc.parallelize(result_data.collect())
+    transformRDD=result_data_rdd.map(lambda article: dict({'category':article['category'],'article':pp.preprocess(article['article']+" "+article['summary']+" "+article["title"])}))
 
-try:
-    print(type(transformRDD.toDF()))
-except Exception as e:
-    print(hasattr(transformRDD,"toDF"))
-    print(type(transformRDD.toDF()))
-#first time the toDF is not working so just catching the exception and doing it again   
-t=transformRDD.toDF().toPandas()
-target_category = t['category'].unique()
-print((t['category']))
-encoder = LabelEncoder()
-t['categoryId'] = encoder.fit_transform(t['category'])
-text = t['article']
-category = t['category']
+    try:
+        print(type(transformRDD.toDF()))
+    except Exception as e:
+        print(hasattr(transformRDD,"toDF"))
+        print(type(transformRDD.toDF()))
+    #first time the toDF is not working so just catching the exception and doing it again   
+    t=transformRDD.toDF().toPandas()
+    target_category = t['category'].unique()
+    print((t['category']))
+    encoder = LabelEncoder()
+    t['categoryId'] = encoder.fit_transform(t['category'])
+    text = t['article']
+    category = t['category']
 
-print(t)
+    print(t)
 
-t.groupby('category').category.count().plot.bar(ylim=0)
+    t.groupby('category').category.count().plot.bar(ylim=0)
 
-X_train, X_test, Y_train, Y_test = train_test_split(text,category, test_size = 0.3, random_state = 60,shuffle=True, stratify=category)
-print("--------------------X_train"+X_train)
-print("---------------Y_train-------------")
-print("Y_train")
-nb = Pipeline([('tfidf', TfidfVectorizer()),
-               ('clf',MultinomialNB()),
-              ])
-nb.fit(X_train,Y_train)
+    X_train, X_test, Y_train, Y_test = train_test_split(text,category, test_size = 0.3, random_state = 60,shuffle=True, stratify=category)
+    print("--------------------X_train"+X_train)
+    print("---------------Y_train-------------")
+    print("Y_train")
+    nb = Pipeline([('tfidf', TfidfVectorizer()),
+                ('clf',MultinomialNB()),
+                ])
+    nb.fit(X_train,Y_train)
 
-test_predict = nb.predict(X_test)
+    test_predict = nb.predict(X_test)
 
-train_accuracy = round(nb.score(X_train,Y_train)*100)
-test_accuracy =round(accuracy_score(test_predict, Y_test)*100)
+    train_accuracy = round(nb.score(X_train,Y_train)*100)
+    test_accuracy =round(accuracy_score(test_predict, Y_test)*100)
 
 
-print("Decision Tree Train Accuracy Score : {}% ".format(train_accuracy ))
-print("Decision Tree Test Accuracy Score  : {}% ".format(test_accuracy ))
+    print("Decision Tree Train Accuracy Score : {}% ".format(train_accuracy ))
+    print("Decision Tree Test Accuracy Score  : {}% ".format(test_accuracy ))
 
-print(classification_report(test_predict, Y_test, target_names=target_category))
-with open("_model.pkl", "wb") as file:
-    pickle.dump(nb, file)
-    
-print(nb.predict([pp.preprocess("cricket")]))
+    print(classification_report(test_predict, Y_test, target_names=target_category))
+    with open(model_path, "wb") as file:
+        pickle.dump(nb, file)
+        
+    print(nb.predict([pp.preprocess("cricket")]))
 
 
 
@@ -97,21 +103,30 @@ def retrain(data):
         global X_train,Y_train
         
         for d in data: 
-            data=get_insert_doc(data)
+            data=get_insert_doc(dict(data))
             preprocessed_data=preprocessed_data+[{'category':d['category'],'article':pp.preprocess(d['article']+" "+d['summary']+" "+d["title"])},]
             X_train=X_train+[d['category'],]
             Y_train=Y_train+[d['article'],]
      
         global nb
         nb.fit(X_train,Y_train)
-        with open("_model.pkl", "wb") as file:
+        with open(model_path, "wb") as file:
             pickle.dump(nb, file)
         #print(nb.predict([pp.preprocess("medicine")]))
         print("retrained successfully")
     except Exception as e:
         print("Error while retraining")
 
-
+def predict(url):
+    if url is not None:
+        try:
+            model = pickle.load(open(model_path,'rb'))
+            article=preprocess(get_article(url))
+        except Exception as e:
+            print("exception occured while parsing "+e)
+            return {"err": e}
+    output = {"category": (model.predict([article,]))[0]}
+    return output
 	
     
 
