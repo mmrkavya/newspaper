@@ -1,0 +1,6 @@
+kafka-python
+pandas
+numpy
+requests
+pymongo
+gnewsclient

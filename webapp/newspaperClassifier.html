@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+function loadDoc() {
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      document.getElementById("test").innerHTML = JSON.parse(this.responseText).category;
+  
+    }
+  };
+  xhttp.open("GET","http://trainer:7777/predict?url="+document.getElementById("fname").value, true);
+  xhttp.send();
+}
+function textClick() {
+       document.getElementById("fname").value = ""
+}
+function textEmpty(){
+	if(document.getElementById("fname").value == ""){
+    	document.getElementById("fname").value="article url"
+    }
+}
+function clearData() {
+       document.getElementById("fname").value = "article url"
+       document.getElementById("test").innerHTML =""
+}
+</script>
+<style>
+body {
+  background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRxbzQI4s4zW2rQN3IqUMA2T9jaJSHVAk1f5g&usqp=CAU');
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-size: cover;
+  -moz-opacity: 0.7;
+  -khtml-opacity: 0.7;
+  align: centre;
+   height: 60vh;
+        padding: 20px;
+   }
+   .footer1 {
+   position:fixed;
+   left:1px;
+   height: 15px;
+   bottom:1px;
+   width:100%;
+   background:#999;
+      }
+
+   </style>
+</head>
+<body>
+<center>
+<div id="demo">
+<h1>NewsPaper Classifier</h1>
+<input type="text" id="fname" name="fname" value="article url" onclick="textClick()" onfocusout="textEmpty()" width="100" height="100">
+<button type="button" onclick="loadDoc()">submit</button>
+<button type="button" onclick="clearData()">clear</button>
+
+</div>
+<div id="test">
+</div>
+</center>
+
+<div class="footer1">
+ Team: DELTA <right> Kavya M (mmrkavya@gmail.com) , Aditi Shilke (aditishilke@gmail.com)</right>
+</div>
+
+</body>
+</html>

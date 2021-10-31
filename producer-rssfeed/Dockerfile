@@ -15,4 +15,4 @@ RUN pip install -r requirement.txt
 COPY . /app
 
 
-ENTRYPOINT python KafkaConsumer.py
+ENTRYPOINT python RSSFeedProducer.py

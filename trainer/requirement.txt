@@ -1,11 +1,10 @@
-pyspark==2.4.6
-scala==2.11.12
+pyspark
 pandas
 newspaper3k
 nltk
 tensorflow
 pymongo
-uvicorn==0.14.0
-fastapi==0.68.0
-requests==2.26.0
-scikit-learn==0.24.2
+uvicorn
+fastapi
+requests
+scikit-learn

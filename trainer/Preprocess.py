@@ -2,8 +2,7 @@ import nltk
 import re
 
 
-from tensorflow import keras
-from keras.preprocessing.text import text_to_word_sequence
+
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 from nltk.stem import WordNetLemmatizer

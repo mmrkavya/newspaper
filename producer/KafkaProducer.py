@@ -9,7 +9,7 @@ import datetime
 import requests
 import os
 #Declaring Kafka_Broker Port
-KAFKA_BROKER = os.getenv("KAFKA_BROKER")
+KAFKA_BROKER = os.getenv("KAFKA_BROKER")==None ? 'localhost:9092':os.getenv("KAFKA_BROKER")
 #Declaring #Kafka Topic
 KAFKA_TOPIC = 'newspaper'
 
