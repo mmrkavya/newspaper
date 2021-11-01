@@ -9,16 +9,17 @@ import datetime
 import requests
 import os
 #Declaring Kafka_Broker Port
-KAFKA_BROKER = os.getenv("KAFKA_BROKER")==None ? 'localhost:9092':os.getenv("KAFKA_BROKER")
-#Declaring #Kafka Topic
+KAFKA_BROKER = os.getenv("KAFKA_BROKER")
+if(KAFKA_BROKER== None):
+    KAFKA_BROKER='kafka:9092'#Declaring #Kafka Topic
 KAFKA_TOPIC = 'newspaper'
 
 try:
 	producer = KafkaProducer(bootstrap_servers=KAFKA_BROKER,value_serializer=lambda x: 
 									 dumps(x).encode('utf-8'))
 except Exception as e:
-	print(f'Error Connecting to Kafka --> {e}')
-
+	print('Error Connecting to Kafka')
+	print(e)
 
 #sending  one record at a time
 #class NpEncoder(json.JSONEncoder):

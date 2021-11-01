@@ -1,0 +1,4 @@
+nltk
+Flask
+beautifulsoup4
+newspaper3k

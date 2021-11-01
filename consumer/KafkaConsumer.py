@@ -7,7 +7,9 @@ from news_article import get_insert_doc
 
 import os
 #Declaring Kafka_Broker Port
-KAFKA_BROKER = os.getenv("KAFKA_BROKER")==None ? 'localhost:9092':os.getenv("KAFKA_BROKER")
+KAFKA_BROKER = os.getenv("KAFKA_BROKER")
+if(KAFKA_BROKER== None):
+    KAFKA_BROKER='kafka:9092'#Declaring #Kafka Topic
 #Declaring #Kafka Topic
 KAFKA_TOPIC = 'newspaper'
 
@@ -19,11 +21,12 @@ consumer = KafkaConsumer(bootstrap_servers=KAFKA_BROKER,auto_offset_reset='earli
 consumer.subscribe([KAFKA_TOPIC])
 #dict_keys(['source', 'author', 'title', 'description', 'url', 'urlToImage', 'publishedAt', 'content','category'])
 for message in consumer :
-	try:
-		article=get_insert_doc(message.value)
-		collection.insert_one(article)
-		print(article)
-	except Exception as e:
-		print(f'error while parsing, not inserted into db --> {e}')
-		
+    try:
+        article=get_insert_doc(message.value)
+        collection.insert_one(article)
+        print(article)
+    except Exception as e:
+        print('error while parsing, not inserted into db ')
+        print(e)
+        
  

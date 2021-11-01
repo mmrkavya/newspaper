@@ -30,7 +30,7 @@ import Preprocess as pp
 X_train=None
 Y_train=None
 nb=None
-model_path='./_model.pickle'
+model_path='./model/_model.pickle'
 
 def initial_model_training():
     spark = SparkSession.\
@@ -38,14 +38,14 @@ def initial_model_training():
     appName("pyspark-notebook2").\
     config("spark.mongodb.input.uri=mongodb://kavya:BzSz97SmGzU9ZKL6@cluster0-shard-00-00.rhrte.mongodb.net:27017,cluster0-shard-00-01.rhrte.mongodb.net:27017,cluster0-shard-00-02.rhrte.mongodb.net:27017/newspaper?ssl=true&replicaSet=atlas-q05w9f-shard-0&authSource=admin&retryWrites=true&w=majority").\
     config("spark.mongodb.output.uri=mongodb://kavya:BzSz97SmGzU9ZKL6@cluster0-shard-00-00.rhrte.mongodb.net:27017,cluster0-shard-00-01.rhrte.mongodb.net:27017,cluster0-shard-00-02.rhrte.mongodb.net:27017/newspaper?ssl=true&replicaSet=atlas-q05w9f-shard-0&authSource=admin&retryWrites=true&w=majority").\
-    config("spark.mongodb.input.database","newspaper").\
-    config("spark.mongodb.input.collection","newspaperFeed"). \
-    config("spark.jars.packages","org.mongodb.spark:mongo-spark-connector_2.12:3.0.1").\
+    #config("spark.mongodb.input.database","newspaper").\
+    #config("spark.mongodb.input.collection","newspaperFeed"). \
+    #config("spark.jars.packages","org.mongodb.spark:mongo-spark-connector_2.11:3.1.2").\
     getOrCreate()
 
     sc=spark.sparkContext
     sqlContext=SQLContext(sc)
-    df = spark.read.format("com.mongodb.spark.sql.DefaultSource").load()
+    df = spark.read.format("com.mongodb.spark.sql.DefaultSource").option("database","newspaper").option("collection", "newspaperFeed").load()
     df.printSchema()
     df.registerTempTable("newspaperFeed")
     result_data=sqlContext.sql("SELECT * from newspaperFeed")
@@ -121,7 +121,7 @@ def predict(url):
     if url is not None:
         try:
             model = pickle.load(open(model_path,'rb'))
-            article=preprocess(get_article(url))
+            article=preprocess(get_article(url)['article'])
         except Exception as e:
             print("exception occured while parsing "+e)
             return {"err": e}

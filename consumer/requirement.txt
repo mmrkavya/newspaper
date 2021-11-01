@@ -1,3 +1,8 @@
+pyspark==3.1.1
+spark-nlp==3.3.0
+nltk
+Flask
+beautifulsoup4
 newspaper3k
 kafka-python
 nltk
