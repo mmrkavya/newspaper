@@ -96,6 +96,7 @@ services:
         command: "python main.py "
         ports:
           - "5000:5000"
+          - "8999:8999"
         volumes:
           - ./model:/app/model
 
