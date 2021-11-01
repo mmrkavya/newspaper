@@ -45,23 +45,28 @@ It predicts (classifies) article, url or any given text .
   
   
   3. Make sure the requirements in requirement.txt file in each of the folders are properly installed.
+    
   4. For running consumer and producer part
+    
     i. Run zookeeper in kafka directory in one terminal
         $ cd kafka/
         $ bin/zookeeper-server-start.sh config/zookeeper.properties
+    
     ii. Run broker in kafka directory of another terminal
         $ cd kafka/
         $ bin/kafka-server-start.sh config/server.properties
-  
+    
     iii. Create topic in new terminal
       $ cd kafka/    
       $  bin/kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic newspaper
+    
     iv. Run consumer by
       $ python KafkaConsumer.py
+    
     v. Run producer by
       $ python KafkaProducer.py
     
-      if required run the other producer parallely in another terminal
+    if required run the other producer parallely in another terminal
       $ python RSSFeedProducer.py
    
     5. For running Trainer create a folder model in trainer directory:
