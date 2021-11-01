@@ -33,28 +33,6 @@ services:
         environment:
           - "SPARK_MASTER=spark://spark-master:7077"
           
-      predict:
-        deploy:
-          replicas: 1
-        build: ./predict/
-        command: "python main.py "
-        ports:
-          - "5000:5000"
-        volumes:
-          - ./model:/app/model
-
-       
-      webapp:
-        deploy:
-          replicas: 1
-        build: webapp
-        container_name: webapp_container
-        ports:
-          - "11030:11030"
-        depends_on:
-         - predict
-      
-
 
       producer:
         build: ./producer/
@@ -88,14 +66,14 @@ services:
           - spark-master
           - kafka
           
-                
-      predict:
+       predict:
         deploy:
           replicas: 1
         build: ./predict/
         command: "python main.py "
         ports:
           - "5000:5000"
+          - "8999:8999:
         volumes:
           - ./model:/app/model
 
@@ -109,12 +87,15 @@ services:
           - "11030:11030"
         depends_on:
          - predict
+      
+
+
       trainer:
         deploy:
           replicas: 1
         build: ./trainer/
         container_name: trainer
-        command: "spark-submit --master spark://spark-master:7077 --packages org.mongodb.spark:mongo-spark-connector_2.12:3.0.1 --jars spark-nlp_2.12-3.3.0.jar main.py "
+        command: "python main.py "
         ports:
           - "7777:7777"
         depends_on:
