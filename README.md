@@ -6,7 +6,7 @@ It predicts (classifies) article, url or any given text .
 
 
 #To run it without docker follow the following steps
-1. Kafka Installation
+1. Kafka Installation:
     i. download kafka and unzip it
     $ wget http://apache.claz.org/kafka/2.2.0/kafka_2.12-2.2.0.tgz
     $ tar -xvf kafka_2.12-2.2.0.tgz
@@ -17,34 +17,34 @@ It predicts (classifies) article, url or any given text .
     iii.install kafka python lib
     $ pip3 install kakfa-python
     
-2. Spark installation
+2. Spark installation:
   i. download and unzip spark 
    $ wget https://archive.apache.org/dist/spark/spark-3.1.2/spark-3.1.2-bin-hadoop3.2.tgz
    $ tar -xvf Downloads/spark-2.4.3-bin-hadoop2.7.tgz
    $ mv spark-2.4.3-bin-hadoop2.7.tgz spark
    
-   ii. install Scala
+   ii. install Scala:
    $ sudo apt install scala -y
    
-   iii. install pyspark
+   iii. install pyspark:
    $ pip3 install pyspark==2.4.6
 
-   iv update the .bashrc file
+   iv update the .bashrc file:
    export PATH=$PATH:/home/<USER>/spark/bin
    export PYSPARK_PYTHON=python3
    
-   After udpating run the following command 
+   After udpating run the following command:
    $ source .bashrc
   
-  v. download the following jar and place it in /spark/jars (jars directory of spark)
-  $ cd usr/spark/jars
-  $ wget https://repo1.maven.org/maven2/org/mongodb/bson/3.8.1/bson-3.8.1.jar
-  $ wget https://oss.sonatype.org/content/repositories/releases/org/mongodb/mongodb-driver-core/3.8.1/
-  $ wget https://oss.sonatype.org/content/repositories/releases/org/mongodb/mongodb-driver/3.8.1/
-  $ wget https://search.maven.org/remotecontent?filepath=org/mongodb/spark/mongo-spark-connector_2.11/2.3.5/mongo-spark-connector_2.11-2.3.5.jar
+  v. download the following jar and place it in /spark/jars (jars directory of spark):
+        $ cd usr/spark/jars
+        $ wget https://repo1.maven.org/maven2/org/mongodb/bson/3.8.1/bson-3.8.1.jar
+        $ wget https://oss.sonatype.org/content/repositories/releases/org/mongodb/mongodb-driver-core/3.8.1/
+        $ wget https://oss.sonatype.org/content/repositories/releases/org/mongodb/mongodb-driver/3.8.1/
+        $ wget https://search.maven.org/remotecontent?filepath=org/mongodb/spark/mongo-spark-connector_2.11/2.3.5/mongo-spark-connector_2.11-2.3.5.jar
   
   
-  3. Make sure the requirements in requirement.txt file in each of the folders are properly installed
+  3. Make sure the requirements in requirement.txt file in each of the folders are properly installed.
   4. For running consumer and producer part:
     i. Run zookeeper in kafka directory in one terminal
         $ cd kafka/
@@ -64,12 +64,12 @@ It predicts (classifies) article, url or any given text .
       if required run the other producer parallely in another terminal
       $ python RSSFeedProducer.py
    
-    5. For running Trainer create a folder model in trainer directory
+    5. For running Trainer create a folder model in trainer directory:
      $ cd trainer
      $ mkdir model
      $ python main.py
  
-   6. For running prediction, go to predict directory
+   6. For running prediction, go to predict directory:
       $ cd predict 
       $ python main.py
    
