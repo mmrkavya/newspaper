@@ -1,4 +1,5 @@
 pyspark
+beautifulsoup4
 pandas
 newspaper3k
 nltk
