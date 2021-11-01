@@ -10,7 +10,7 @@ function loadDoc() {
 	  a=JSON.parse(this.responseText).category;
 	  if(a != null){
 		document.getElementById("test").innerHTML = JSON.parse(this.responseText).category;
-  
+		console.log(a)
 	  }
 	  else{
 	  document.getElementById("test").innerHTML = "ERROR WHILE PARSING .";
@@ -19,7 +19,7 @@ function loadDoc() {
       
     }
   };
-  xhttp.open("GET","http://predict:5000/predict?url="+document.getElementById("fname").value, true);
+  xhttp.open("GET","http://predict:8999/predict?url="+document.getElementById("fname").value, true);
   xhttp.send();
 }
 function textClick() {
@@ -64,7 +64,7 @@ body {
 <h1>NewsPaper Classifier</h1>
 <input type="text" id="fname" name="fname" value="article/url" onclick="textClick()" onfocusout="textEmpty()" width="100" height="100">
 <button type="button" onclick="loadDoc()">submit</button>
-<button type="button" onclick="clearData()">clear</button>
+<button type="button" onclick="clearData()" onhover="clearData()">clear</button>
 
 </div>
 <div id="test">

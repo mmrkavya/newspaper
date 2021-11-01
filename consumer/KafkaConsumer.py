@@ -9,7 +9,7 @@ import os
 #Declaring Kafka_Broker Port
 KAFKA_BROKER = os.getenv("KAFKA_BROKER")
 if(KAFKA_BROKER== None):
-    KAFKA_BROKER='kafka:9092'#Declaring #Kafka Topic
+    KAFKA_BROKER='localhost:9092'#Declaring #Kafka Topic
 #Declaring #Kafka Topic
 KAFKA_TOPIC = 'newspaper'
 
