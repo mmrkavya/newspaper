@@ -115,7 +115,7 @@ services:
           replicas: 1
         build: ./trainer/
         container_name: trainer
-        command: "spark-submit --master spark://spark-master:7077 --packages org.mongodb.spark:mongo-spark-connector_2.12:3.0.1 --jars spark-nlp_2.12-3.3.0.jar main.py "
+        command: "python main.py "
         ports:
           - "7777:7777"
         depends_on:
