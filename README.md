@@ -45,7 +45,7 @@ It predicts (classifies) article, url or any given text .
   
   
   3. Make sure the requirements in requirement.txt file in each of the folders are properly installed.
-  4. For running consumer and producer part:
+  4. For running consumer and producer part
     i. Run zookeeper in kafka directory in one terminal
         $ cd kafka/
         $ bin/zookeeper-server-start.sh config/zookeeper.properties
