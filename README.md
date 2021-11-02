@@ -4,12 +4,14 @@ Newspaper classifier
 
 It predicts (classifies) article, url or any given text . (Report with Architecture and screen shot is given in FinalReport presentation)
 
+    Note: Please note that some parts needs to be commented in docekr compose if only a part of the code needs to be executed. 
+
 ## How it works!!
 In the front end of the newspaper classifier will be text box in which either url of the article or the actual text can be entered.
 On click of submit the text in the text box will be sent to predict api and response will be displayed to the User below the text box.
 To clear the result click on clear button.
 
-#With Docker:
+# With Docker:
 ### Run only kafka consumer and producer:
 1. Comment predict, webapp, trainer in the docker-compose yaml
 2. docker-compose up
@@ -22,7 +24,7 @@ To clear the result click on clear button.
 1. Comment producer,producer-rssfeed, predict, webapp
 2. docker-compose up
 
-#To run it without docker follow the following steps
+# To run it without docker follow the following steps
 ### Make sure that kafka host and UI xhrhttprequest url are made localhost
 1. Kafka Installation:
 
