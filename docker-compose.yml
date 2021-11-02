@@ -1,5 +1,29 @@
 version: '3'
 services:
+
+      predict:
+        deploy:
+          replicas: 1
+        build: ./predict/
+        command: "python main.py "
+        ports:
+          - "5000:5000"
+          - "8999:8999"
+        volumes:
+          - ./model:/app/model
+
+       
+      webapp:
+        deploy:
+          replicas: 1
+        build: ./webapp/
+        container_name: webapp_container
+        ports:
+          - "11030:11030"
+        depends_on:
+         - predict
+         
+         
       zookeeper:
         image: wurstmeister/zookeeper
         ports:
@@ -68,27 +92,7 @@ services:
           - kafka
           
                 
-      predict:
-        deploy:
-          replicas: 1
-        build: ./predict/
-        command: "python main.py "
-        ports:
-          - "5000:5000"
-          - "8999:8999"
-        volumes:
-          - ./model:/app/model
 
-       
-      webapp:
-        deploy:
-          replicas: 1
-        build: ./webapp/
-        container_name: webapp_container
-        ports:
-          - "11030:11030"
-        depends_on:
-         - predict
          
 #       trainer:
 #         deploy:
