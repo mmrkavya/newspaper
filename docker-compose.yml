@@ -90,16 +90,16 @@ services:
         depends_on:
          - predict
          
-      trainer:
-        deploy:
-          replicas: 1
-        build: ./trainer/
-        container_name: trainer
-        command: "python main.py "
-        ports:
-          - "7777:7777"
-        depends_on:
-          - spark-master
+#       trainer:
+#         deploy:
+#           replicas: 1
+#         build: ./trainer/
+#         container_name: trainer
+#         command: "python main.py "
+#         ports:
+#           - "7777:7777"
+#         depends_on:
+#           - spark-master
 
       
 
