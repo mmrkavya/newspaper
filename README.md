@@ -3,7 +3,10 @@ predicts topic of the newspaper
 Newspaper classifier
 
 It predicts (classifies) article, url or any given text . (Report with Architecture and screen shot is given in FinalReport presentation)
-!!!!  NOTE: Please note that in docker-compose only the predict and webapp is uncommented to run !!!!
+
+####!!!!  NOTE: Please note that in docker-compose only the predict and webapp is uncommented to run !!!!
+
+
 ## How it works!!
 In the front end of the newspaper classifier will be text box in which either url of the article or the actual text can be entered.
 On click of submit the text in the text box will be sent to predict api and response will be displayed to the User below the text box.
