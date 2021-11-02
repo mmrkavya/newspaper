@@ -78,29 +78,32 @@ To clear the result click on clear button.
     
   4. For running consumer and producer part
     
-    i. Run zookeeper in kafka directory in one terminal
+    i) Run zookeeper in kafka directory in one terminal
+    
         $ cd kafka/
         $ bin/zookeeper-server-start.sh config/zookeeper.properties
     
-    ii. Run broker in kafka directory of another terminal
+    ii) Run broker in kafka directory of another terminal
+    
         $ cd kafka/
         $ bin/kafka-server-start.sh config/server.properties
 
-    iii. Create topic in new terminal
+    iii) Create topic in new terminal
+    
         $ cd kafka/    
         $  bin/kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic newspaper
 
-    iv. Run consumer by
+    iv) Run consumer by
     
-      $ python KafkaConsumer.py
+        $ python KafkaConsumer.py
     
-    v. Run producer by
-    
-      $ python KafkaProducer.py
+    v) Run producer by
+        
+        $ python KafkaProducer.py
     
       if required run the other producer parallely in another terminal
-    
-      $ python RSSFeedProducer.py
+      
+        $ python RSSFeedProducer.py
       
    
     5. For running Trainer create a folder model in trainer directory:
@@ -110,6 +113,7 @@ To clear the result click on clear button.
          $ python main.py
  
    6. For running prediction, go to predict directory:
+   
           $ cd predict 
           $ python main.py
    
