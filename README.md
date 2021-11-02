@@ -1,31 +1,31 @@
 # newspaper
+
 predicts topic of the newspaper
 Newspaper classifier
 
 It predicts (classifies) article, url or any given text . (Report with Architecture and screen shot is given in FinalReport presentation)
 
-####!!!!  NOTE: Please note that in docker-compose only the predict and webapp is uncommented to run !!!!
-
+    Note: Please note that some parts of docker-compose yaml is  commented to run only the predict part of the code. 
 
 ## How it works!!
 In the front end of the newspaper classifier will be text box in which either url of the article or the actual text can be entered.
 On click of submit the text in the text box will be sent to predict api and response will be displayed to the User below the text box.
 To clear the result click on clear button.
 
-#With Docker:
+# With Docker:
 ### Run only kafka consumer and producer:
 1. Comment predict, webapp, trainer in the docker-compose yaml
 2. docker-compose up
 
 ### Run only predict and webapp
-1. Comment zookeeper,kafka, spark-master, spark-worker, consumer, producer, producer-rssfeed , trainer
+1. Comment kafka, spark-master, spark-worker, consumer, producer, producer-rssfeed , trainer
 2. docker-compose up
 
 ### Run only training model
 1. Comment producer,producer-rssfeed, predict, webapp
 2. docker-compose up
 
-#To run it without docker follow the following steps
+# To run it without docker follow the following steps
 ### Make sure that kafka host and UI xhrhttprequest url are made localhost
 1. Kafka Installation:
 
@@ -79,7 +79,8 @@ To clear the result click on clear button.
   
   3. Make sure the requirements in requirement.txt file in each of the folders are properly installed.
     
-  4. For running consumer and producer part    
+  4. For running consumer and producer part
+    
     i) Run zookeeper in kafka directory in one terminal
     
         $ cd kafka/
