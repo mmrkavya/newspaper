@@ -17,4 +17,4 @@ RUN python -m nltk.downloader punkt
 
 COPY . /app
 
-ENTRYPOINT python predict.py
+ENTRYPOINT python main.py
